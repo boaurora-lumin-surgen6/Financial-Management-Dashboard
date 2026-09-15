@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>理财工作台 · 零基预算</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --border:#e6e8eb; --text:#1f2329; --muted:#6b7280;
+    --accent:#2b6cb0; --accent-soft:#eaf2fb; --green:#2f9e44; --yellow:#e8a317; --red:#d92d20;
+    --shadow:0 1px 2px rgba(16,24,40,.06); --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);margin:0;padding:22px;line-height:1.5}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .topbar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}
+  .topbar .field{display:flex;flex-direction:column;gap:3px}
+  .topbar label{font-size:11px;color:var(--muted)}
+  input,select,button,textarea{font-family:inherit;font-size:13px}
+  input[type=text],input[type=number],input[type=date],select,textarea{border:1px solid var(--border);border-radius:7px;padding:7px 9px;background:#fff;color:var(--text);outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  button{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:8px 13px;cursor:pointer;font-weight:500}
+  button:hover{filter:brightness(1.05)}
+  button.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  button.subtle{background:#f3f4f6;color:var(--text);border:1px solid var(--border)}
+  button.danger{background:#fff;color:var(--red);border:1px solid #f3c8c4}
+  button.small{padding:4px 9px;font-size:12px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+  .card h2{font-size:14px;margin:0 0 12px;display:flex;align-items:center;gap:6px}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .summary{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:14px}
+  .summary .box{font-size:12px;color:var(--muted)}
+  .summary .box b{font-size:20px;display:block;color:var(--text);font-variant-numeric:tabular-nums}
+  .bar{height:9px;border-radius:5px;background:#eef0f3;overflow:hidden;margin-top:4px}
+  .bar>span{display:block;height:100%;border-radius:5px;transition:width .3s}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  .pill{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+  .pill.ok{background:#e7f6ec;color:var(--green)}
+  .pill.warn{background:#fdf3df;color:var(--yellow)}
+  .pill.over{background:#fde9e7;color:var(--red)}
+  .tag{font-size:11px;color:var(--muted);background:#f3f4f6;border-radius:5px;padding:1px 6px}
+  .right{text-align:right}
+  .grow{flex:1}
+  .danger-txt{color:var(--red);font-weight:600}
+  .warn-txt{color:var(--yellow);font-weight:600}
+  .ok-txt{color:var(--green);font-weight:600}
+  details{margin-top:8px;border:1px dashed var(--border);border-radius:8px;padding:8px 12px}
+  details>summary{cursor:pointer;color:var(--muted);font-size:12px;font-weight:600}
+  details[open]>summary{margin-bottom:10px}
+  .footnote{font-size:12px;color:var(--muted);text-align:center;margin-top:18px}
+  .alloc-warn{color:var(--red);font-size:12px;margin-top:6px}
+  .alloc-ok{color:var(--green);font-size:12px;margin-top:6px}
+  textarea{width:100%;min-height:90px;resize:vertical}
+  .preview-wrap{max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:7px;margin-top:8px}
+  .pv-bulk{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+  .pv-mer{cursor:pointer}
+  .pv-mer:hover{color:var(--accent);text-decoration:underline}
+  tr.pv-on{background:var(--accent-soft)}
+  .empty{color:var(--muted);font-size:13px;padding:14px;text-align:center}
+  .date-today{color:var(--accent);font-weight:700}
+  .date-muted{color:var(--muted)}
+  .exNoteInp{width:115px;border:1px solid transparent;background:transparent;padding:4px 6px;border-radius:5px;color:var(--muted);font-size:12px}
+  .exNoteInp:hover{border-color:var(--border)}
+  .exNoteInp:focus{border-color:var(--accent);background:#fff;color:var(--text);box-shadow:0 0 0 3px var(--accent-soft)}
+  .exNoteInp::placeholder{color:#c3c7cd}
+  #monthNoteArea{min-height:120px}
+  #mOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1000;align-items:center;justify-content:center}
+  #mOverlay.show{display:flex}
+  #mBox{background:#fff;border-radius:12px;padding:22px 24px;max-width:350px;box-shadow:0 12px 40px rgba(0,0,0,.2);text-align:center;margin:0 16px}
+  #mBox .mMsg{font-size:14px;margin-bottom:18px;color:var(--text);line-height:1.6}
+  #mBox .mBtns{display:flex;gap:10px;justify-content:center}
+  #toast{display:none;position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1f2329;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:2000;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap;transition:opacity .25s;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💰 理财工作台 · 零基预算</h1>
+  <p class="sub">收入写一次 → 按你设的规则自动分配到各模块 → 消费落在预算内，到边界就预警。数据存在本浏览器本地，可导出备份。</p>
+
+  <!-- 顶部：月份 + 收入 -->
+  <div class="card">
+    <div class="topbar">
+      <div class="field">
+        <label>月份</label>
+        <input type="month" id="monthInput">
+      </div>
+      <div class="field">
+        <label>本月收入（元）</label>
+        <input type="number" id="incomeInput" min="0" step="0.01" style="width:160px">
+      </div>
+      <button id="applyIncome">应用收入</button>
+      <button class="ghost" id="loadDemo">载入示例</button>
+      <button class="subtle" id="clearMonth">清空本月</button>
+      <span class="grow"></span>
+      <button class="subtle small" id="exportBtn">导出 JSON</button>
+      <button class="subtle small" id="importBtn">导入 JSON</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+    </div>
+    <div class="summary" id="summaryBox"></div>
+  </div>
+
+  <div class="grid">
+    <!-- 左：规则配置 -->
+    <div class="card">
+      <h2>⚙️ 预算分配规则 <span class="tag">你设的"笔记"</span></h2>
+      <table id="rulesTable">
+        <thead><tr><th>模块</th><th>类型</th><th class="num">值</th><th class="num">预算</th><th></th></tr></thead>
+        <tbody id="rulesBody"></tbody>
+      </table>
+      <div class="row" style="margin-top:10px">
+        <button class="subtle small" id="addRule">+ 添加模块</button>
+        <span class="grow"></span>
+        <span id="allocStat"></span>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer">
+          <input type="checkbox" id="autoMigrateChk" style="width:auto"> 新月份自动继承上月规则
+        </label>
+        <span class="grow"></span>
+        <select id="migrateSrcSel" style="width:auto;font-size:12px;padding:3px 6px"></select>
+        <button class="subtle small" id="migrateRulesBtn">📋 复制规则</button>
+      </div>
+      <p class="hint">类型说明：<b>百分比</b> = 收入×比例；<b>固定</b> = 固定金额（如话费）；<b>余下</b> = 收入减去其他模块后的余额，通常给"储蓄/应急"。建议始终保留一个"余下"模块，让收入100%有归属。</p>
+    </div>
+
+    <!-- 右：预算看板 -->
+    <div class="card">
+      <h2>📊 预算执行看板</h2>
+      <div id="dashBody"></div>
+    </div>
+  </div>
+
+  <!-- 记一笔 -->
+  <div class="card">
+    <h2>✍️ 记一笔</h2>
+    <div class="row">
+      <input type="date" id="exDate" style="width:150px">
+      <input type="text" id="exMerchant" placeholder="商家/说明（如 美团外卖）" style="flex:1;min-width:160px">
+      <input type="number" id="exAmount" placeholder="金额" step="0.01" min="0" style="width:110px">
+      <select id="exCat" style="width:130px"></select>
+      <input type="text" id="exNote" placeholder="备注（可选）" style="flex:1;min-width:130px">
+      <button id="addEx">添加</button>
+    </div>
+    <p class="hint">说明一行就是一条流水，适合偶尔补记。批量导入见下方"批量导入"。</p>
+  </div>
+
+  <!-- 流水列表 -->
+  <div class="card">
+    <h2>📒 本月流水</h2>
+    <div class="row">
+      <select id="filterCat" style="width:140px"><option value="">全部模块</option></select>
+      <span class="grow"></span>
+      <span class="hint" id="exCount"></span>
+    </div>
+    <div id="exTableWrap"></div>
+  </div>
+
+  <!-- 本月复盘 -->
+  <div class="card">
+    <h2>📝 本月复盘 <span class="tag">每月总结 · 便于回顾</span></h2>
+    <div class="row" style="margin-bottom:8px">
+      <button class="ghost small" id="aiMonthBtn">🤖 生成本月分析</button>
+      <button class="ghost small" id="aiWeekBtn">📈 生成近一周分析</button>
+      <span class="hint" style="margin-top:0">分析写入下方独立区块，你的手动总结不会被覆盖；重复生成会自动更新该区块</span>
+    </div>
+    <textarea id="monthNoteArea" placeholder="月底写总结，方便复盘：&#10;· 哪个模块超支了？为什么？&#10;· 哪笔钱花得值 / 不值？&#10;· 下个月预算规则要不要调整？&#10;&#10;例如：餐饮超支200，主要是奶茶和外卖，下月每周限2次；学习投入达标，保持。"></textarea>
+    <p class="hint">自动保存 · 每个月独立 · 切换月份即可查看对应月份的复盘</p>
+  </div>
+
+  <!-- 批量导入 -->
+  <details>
+    <summary>📥 批量导入（从钱迹/支付宝/微信导出后粘贴）</summary>
+    <p class="hint">把账单 CSV 或文本整段粘贴到下面，点"解析预览"。系统会自动抓取每行的金额，用商家/说明匹配下方关键词得到模块。预览里可勾选多条后用右上角下拉"批量设为"统一分类，点击商家名可一键选中同商家的所有行。确认后导入。</p>
+    <textarea id="pasteArea" placeholder="例如直接粘贴钱迹导出的 CSV 内容&#10;2026-08-03,美团外卖,-28.5&#10;2026-08-04,滴滴出行,-12.00"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="ghost small" id="parseBtn">解析预览</button>
+      <button class="small" id="confirmImportBtn" disabled>确认导入</button>
+      <span id="parseInfo" class="hint"></span>
+    </div>
+    <div class="pv-bulk" id="pvBulkBar" style="display:none">
+      <button class="subtle small" id="pvSelOther">选中全部「其他」</button>
+      <button class="subtle small" id="pvSelNone">清除选择</button>
+      <span class="grow"></span>
+      <span class="hint" id="pvSelCount" style="margin-top:0">已选 0 条</span>
+      <select id="pvBulkCat" style="width:130px"></select>
+      <button class="small" id="pvBulkApply">⚡ 批量设为</button>
+    </div>
+    <div class="preview-wrap" id="previewWrap" style="display:none"></div>
+
+    <details style="margin-top:14px">
+      <summary>🏷️ 关键词 → 模块 映射规则</summary>
+      <table id="kwTable">
+        <thead><tr><th>关键词（包含即匹配）</th><th>归入模块</th><th></th></tr></thead>
+        <tbody id="kwBody"></tbody>
+      </table>
+      <div class="row" style="margin-top:8px">
+        <button class="subtle small" id="addKw">+ 添加关键词</button>
+      </div>
+    </details>
+  </details>
+
+  <p class="footnote">数据自动保存到本浏览器 · 切换月份即可管理不同月份 · 定期用"导出 JSON"备份到 wiki 目录</p>
+</div>
+
+<div id="mOverlay"><div id="mBox"><div class="mMsg" id="mMsg"></div><div class="mBtns"><button class="subtle" id="mNo">取消</button><button id="mYes">确认</button></div></div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const PREFIX = "finTrack_";
+
+function curMonth(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function fmt(n){
+  if(!isFinite(n)) n=0;
+  return n.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function todayStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function defaultRules(){
+  return [
+    {cat:"餐饮",type:"pct",value:30},
+    {cat:"交通",type:"pct",value:5},
+    {cat:"话费网费",type:"fixed",value:50},
+    {cat:"学习提升",type:"pct",value:10},
+    {cat:"社交恋爱",type:"pct",value:12},
+    {cat:"弹性娱乐",type:"pct",value:13},
+    {cat:"储蓄应急",type:"rest",value:0}
+  ];
+}
+function defaultKeywords(){
+  return [
+    {kw:"美团",cat:"餐饮"},{kw:"饿了么",cat:"餐饮"},{kw:"外卖",cat:"餐饮"},
+    {kw:"麦当劳",cat:"餐饮"},{kw:"肯德基",cat:"餐饮"},{kw:"蜜雪",cat:"餐饮"},{kw:"瑞幸",cat:"餐饮"},{kw:"奶茶",cat:"餐饮"},
+    {kw:"滴滴",cat:"交通"},{kw:"地铁",cat:"交通"},{kw:"公交",cat:"交通"},{kw:"高德",cat:"交通"},{kw:"哈啰",cat:"交通"},
+    {kw:"移动",cat:"话费网费"},{kw:"联通",cat:"话费网费"},{kw:"电信",cat:"话费网费"},{kw:"宽带",cat:"话费网费"},
+    {kw:"当当",cat:"学习提升"},{kw:"网易云课堂",cat:"学习提升"},{kw:"慕课",cat:"学习提升"},{kw:"书籍",cat:"学习提升"},{kw:"AcWing",cat:"学习提升"},
+    {kw:"淘宝",cat:"弹性娱乐"},{kw:"京东",cat:"弹性娱乐"},{kw:"拼多多",cat:"弹性娱乐"},
+    {kw:"电影",cat:"弹性娱乐"},{kw:"游戏",cat:"弹性娱乐"},{kw:"Steam",cat:"弹性娱乐"}
+  ];
+}
+function freshState(month){
+  return {month, income:0, rules:defaultRules(), keywords:defaultKeywords(), expenses:[], monthNote:""};
+}
+function demoState(month){
+  const s = freshState(month);
+  s.income = 3000;
+  s.monthNote = "本月复盘示例：餐饮占比偏高，下周减少奶茶外卖；学习投入达标，保持。";
+  s.expenses = [
+    {date:`${month}-03`,merchant:"美团外卖",amount:28.5,cat:"餐饮",note:"午饭懒得下楼"},
+    {date:`${month}-05`,merchant:"瑞幸咖啡",amount:15.0,cat:"餐饮",note:"新品尝鲜"},
+    {date:`${month}-06`,merchant:"滴滴出行",amount:12.0,cat:"交通",note:"下雨"},
+    {date:`${month}-07`,merchant:"AcWing会员",amount:39.0,cat:"学习提升",note:"暑假刷题用"},
+    {date:`${month}-08`,merchant:"京东",amount:88.0,cat:"弹性娱乐",note:"买教材和键盘"}
+  ];
+  for(const e of s.expenses){ if(e.merchant) merchantMap[e.merchant]=e.cat; }
+  saveMerchantMap();
+  return s;
+}
+
+let state = null;
+let parsedPreview = [];
+
+// ===== 全局设置（跨月份共享）=====
+const SETTINGS_KEY = "finTrack_settings";
+let settings = { autoMigrateRules: true };
+function loadSettings(){
+  const raw = localStorage.getItem(SETTINGS_KEY);
+  if(raw){ try{ settings = {...settings, ...JSON.parse(raw)}; }catch(e){} }
+}
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+
+// ===== 全局商家记忆（跨月份共享）=====
+let merchantMap = {};
+function loadMerchantMap(){
+  const raw = localStorage.getItem(PREFIX+"merchantMap");
+  if(raw){ try{ merchantMap = JSON.parse(raw); }catch(e){} }
+}
+function saveMerchantMap(){ localStorage.setItem(PREFIX+"merchantMap", JSON.stringify(merchantMap)); }
+
+// ===== 月份工具 =====
+function findPrevMonthWithData(month){
+  const [y,m] = month.split("-").map(Number);
+  let dy=y, dm=m-1;
+  for(let i=0;i<36;i++){
+    if(dm<1){ dm=12; dy--; }
+    const mo = dy + "-" + String(dm).padStart(2,"0");
+    if(localStorage.getItem(PREFIX+mo)) return mo;
+    dm--;
+  }
+  return null;
+}
+function getAllMonthsWithData(){
+  const months=[];
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith(PREFIX) && key!==PREFIX+"merchantMap"){
+      const m=key.slice(PREFIX.length);
+      if(/^\d{4}-\d{2}$/.test(m)) months.push(m);
+    }
+  }
+  return months.sort().reverse();
+}
+
+function load(month){
+  const raw = localStorage.getItem(PREFIX+month);
+  if(raw){ try{ state=JSON.parse(raw); state.month=month; }catch(e){ state=freshState(month); } }
+  else {
+    state=freshState(month);
+    // 自动迁移：从最近一个有数据的月份复制规则和关键词
+    if(settings.autoMigrateRules){
+      const prev=findPrevMonthWithData(month);
+      if(prev){
+        try{
+          const ps=JSON.parse(localStorage.getItem(PREFIX+prev));
+          if(ps && ps.rules && ps.rules.length) state.rules=JSON.parse(JSON.stringify(ps.rules));
+          if(ps && ps.keywords) state.keywords=JSON.parse(JSON.stringify(ps.keywords));
+        }catch(e){}
+      }
+    }
+  }
+  if(!state.rules||!state.rules.length) state.rules=defaultRules();
+  if(!state.keywords) state.keywords=defaultKeywords();
+  if(!state.expenses) state.expenses=[];
+  if(!state.monthNote) state.monthNote="";
+  // 向后兼容：补全缺日期的旧流水，记为所属月第一天
+  state.expenses.forEach(e=>{ if(!e.date) e.date=state.month+"-01"; });
+  // 向后兼容：旧版商家记忆存在月度 state 里，合并到全局后删除
+  if(state.merchantMap){
+    for(const k in state.merchantMap){ if(!merchantMap[k]) merchantMap[k]=state.merchantMap[k]; }
+    saveMerchantMap();
+    delete state.merchantMap;
+  }
+}
+function save(){ const s={...state}; delete s.merchantMap; localStorage.setItem(PREFIX+state.month, JSON.stringify(s)); }
+
+// 预算计算
+function computeBudgets(){
+  let allocated=0; const out=[]; let restRule=null;
+  for(const r of state.rules){
+    if(r.type==="pct"){ const b=state.income*r.value/100; out.push({...r,budget:b}); allocated+=b; }
+    else if(r.type==="fixed"){ out.push({...r,budget:r.value}); allocated+=r.value; }
+    else if(r.type==="rest"){ restRule=r; }
+  }
+  if(restRule){ out.push({...restRule,budget:Math.max(0,state.income-allocated)}); }
+  else if(state.income-allocated>0.001){
+    out.push({cat:"未分配",type:"rest",value:0,budget:Math.max(0,state.income-allocated),auto:true});
+  }
+  return out;
+}
+function spentByCat(){
+  const m={};
+  for(const e of state.expenses){ m[e.cat]=(m[e.cat]||0)+e.amount; }
+  return m;
+}
+
+// 关键词匹配
+function matchCategory(text){
+  if(!text) return "其他";
+  const t=String(text).toLowerCase();
+  // 优先：商家记忆（全局，跨月份共享）
+  let memHit=null, memLen=0;
+  for(const k in merchantMap){
+    const kl=k.toLowerCase();
+    if(t===kl){ memHit=merchantMap[k]; break; }
+    if(t.includes(kl) && kl.length>memLen){ memHit=merchantMap[k]; memLen=kl.length; }
+  }
+  if(memHit) return memHit;
+  // 其次：关键词匹配
+  const kws=[...state.keywords].sort((a,b)=>b.kw.length-a.kw.length);
+  for(const k of kws){ if(t.includes(String(k.kw).toLowerCase())) return k.cat; }
+  return "其他";
+}
+
+// ===== 渲染 =====
+function catList(){ return state.rules.map(r=>r.cat); }
+function allCats(){
+  const set=new Set(state.rules.map(r=>r.cat));
+  for(const e of state.expenses){ if(e.cat) set.add(e.cat); }
+  set.add("其他");
+  return [...set];
+}
+function usage(r){ if(r.budget>0) return r.spent/r.budget; return r.spent>0?Infinity:0; }
+
+function renderRules(){
+  const body=document.getElementById("rulesBody");
+  body.innerHTML="";
+  const budgets=computeBudgets();
+  state.rules.forEach((r,i)=>{
+    const b=budgets.find(x=>x.cat===r.cat)||{};
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input type="text" class="rCat" data-i="${i}" value="${escapeHtml(r.cat)}" style="width:110px"></td>
+      <td>
+        <select class="rType" data-i="${i}">
+          <option value="pct"${r.type==="pct"?" selected":""}>百分比</option>
+          <option value="fixed"${r.type==="fixed"?" selected":""}>固定</option>
+          <option value="rest"${r.type==="rest"?" selected":""}>余下</option>
+        </select>
+      </td>
+      <td class="num"><input type="number" class="rVal" data-i="${i}" value="${r.value}" step="0.01" min="0" style="width:70px;text-align:right" ${r.type==="rest"?"disabled":""}></td>
+      <td class="num">${fmt(b.budget||0)}</td>
+      <td class="right"><button class="danger small rDel" data-i="${i}">删</button></td>`;
+    body.appendChild(tr);
+  });
+  // 分配统计
+  const stat=document.getElementById("allocStat");
+  let pctSum=0, fixedSum=0, hasRest=state.rules.some(r=>r.type==="rest");
+  for(const r of state.rules){ if(r.type==="pct") pctSum+=r.value; else if(r.type==="fixed") fixedSum+=r.value; }
+  const remain=100-pctSum;
+  if(!hasRest){
+    stat.innerHTML=`<span class="${remain===0?"alloc-ok":"alloc-warn"}">百分比合计 ${pctSum}%，余 ${remain}% 未分配${fixedSum?` · 另有固定 ${fmt(fixedSum)}元`:""}</span>`;
+  } else {
+    stat.innerHTML=`<span class="alloc-ok">百分比合计 ${pctSum}% · 固定 ${fmt(fixedSum)}元 · 剩余自动归入"余下"模块 ✓</span>`;
+  }
+  // 绑定
+  body.querySelectorAll(".rCat").forEach(el=>el.onchange=e=>{state.rules[+el.dataset.i].cat=el.value.trim()||`模块${+el.dataset.i+1}`;save();renderAll();});
+  body.querySelectorAll(".rType").forEach(el=>el.onchange=e=>{state.rules[+el.dataset.i].type=el.value;save();renderAll();});
+  body.querySelectorAll(".rVal").forEach(el=>el.onchange=e=>{state.rules[+el.dataset.i].value=Math.max(0,parseFloat(el.value)||0);save();renderAll();});
+  body.querySelectorAll(".rDel").forEach(el=>el.onclick=e=>{state.rules.splice(+el.dataset.i,1);save();renderAll();});
+}
+function renderDashboard(){
+  const wrap=document.getElementById("dashBody");
+  const budgets=computeBudgets();
+  const spent=spentByCat();
+  if(budgets.length===0){ wrap.innerHTML=`<div class="empty">先在左侧添加预算模块</div>`; return; }
+  let totalB=0,totalS=0;
+  let html=`<table><thead><tr><th>模块</th><th class="num">预算</th><th class="num">已花</th><th class="num">剩余</th><th style="width:34%">进度</th></tr></thead><tbody>`;
+  for(const b of budgets){
+    const s=spent[b.cat]||0; const remain=b.budget-s;
+    const pct=b.budget>0?Math.min(100,(s/b.budget*100)):0;
+    const realPct=b.budget>0?(s/b.budget*100):0;
+    let color="var(--green)", pillCls="ok", pillTxt="安全";
+    if(realPct>=100){color="var(--red)";pillCls="over";pillTxt="超支";}
+    else if(realPct>=80){color="var(--yellow)";pillCls="warn";pillTxt="接近";}
+    totalB+=b.budget; totalS+=s;
+    html+=`<tr>
+      <td>${escapeHtml(b.cat)}${b.auto?' <span class="tag">未分配</span>':''}</td>
+      <td class="num">${fmt(b.budget)}</td>
+      <td class="num">${fmt(s)}</td>
+      <td class="num ${realPct>=100?"danger-txt":realPct>=80?"warn-txt":""}">${fmt(remain)}</td>
+      <td>
+        <div class="bar"><span style="width:${pct}%;background:${color}"></span></div>
+        <span class="pill ${pillCls}" style="margin-top:3px;display:inline-block">${pillTxt} ${realPct.toFixed(0)}%</span>
+      </td></tr>`;
+  }
+  // 未纳入预算的模块（如"其他"、规则改名后的旧模块）也要展示，否则这些支出凭空消失
+  const extraCats=Object.keys(spent).filter(c=>c!=="未分配"&&!budgets.some(b=>b.cat===c));
+  let extraSpent=0;
+  for(const c of extraCats){
+    const s=spent[c]||0;
+    extraSpent+=s; totalS+=s;
+    html+=`<tr>
+      <td>${escapeHtml(c)} <span class="tag">未设预算</span></td>
+      <td class="num">—</td>
+      <td class="num">${fmt(s)}</td>
+      <td class="num danger-txt">—</td>
+      <td>
+        <div class="bar"><span style="width:100%;background:var(--red)"></span></div>
+        <span class="pill over" style="margin-top:3px;display:inline-block">未纳入预算</span>
+      </td></tr>`;
+  }
+  html+=`</tbody></table>`;
+  if(extraCats.length){
+    const n=state.expenses.filter(e=>extraCats.includes(e.cat)).length;
+    html+=`<p class="hint">⚠️ 有 ${n} 笔支出（${extraCats.map(escapeHtml).join("、")}）不属于任何预算模块。建议：在左侧规则表添加该模块，或在流水列表里把这些账改到已有模块。</p>`;
+  }
+  wrap.innerHTML=html;
+  // 顶部汇总
+  const sb=document.getElementById("summaryBox");
+  const totalRemain=state.income-totalS;
+  sb.innerHTML=`
+    <div class="box">本月收入<b>${fmt(state.income)}</b></div>
+    <div class="box">总预算<b>${fmt(totalB)}</b></div>
+    <div class="box">已支出<b>${fmt(totalS)}</b></div>
+    <div class="box">结余<b style="color:${totalRemain<0?"var(--red)":"var(--green)"}">${fmt(totalRemain)}</b></div>`;
+}
+function renderCategorySelects(){
+  const cats=allCats();
+  for(const id of ["exCat","filterCat"]){
+    const el=document.getElementById(id);
+    const cur=el.value;
+    if(id==="filterCat") el.innerHTML=`<option value="">全部模块</option>`+cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    else el.innerHTML=cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    if(cur && cats.includes(cur)) el.value=cur;
+  }
+}
+function fmtDate(d){
+  if(!d) return '<span class="date-muted">—</span>';
+  const m=String(d).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(!m) return escapeHtml(d);
+  const y=m[1], mo=+m[2], day=+m[3];
+  const w=["日","一","二","三","四","五","六"][new Date(y,mo-1,day).getDay()];
+  const pad=n=>String(n).padStart(2,"0");
+  const full=`${y}-${pad(mo)}-${pad(day)}`;
+  const isToday=full===todayStr();
+  return `<span${isToday?' class="date-today"':''} title="${full}">${mo}月${day}日 周${w}${isToday?" ·今天":""}</span>`;
+}
+function renderExpenses(){
+  const wrap=document.getElementById("exTableWrap");
+  const fc=document.getElementById("filterCat").value;
+  let list=[...state.expenses];
+  if(fc) list=list.filter(e=>e.cat===fc);
+  list.sort((a,b)=> (a.date<b.date?1:a.date>b.date?-1:0));
+  document.getElementById("exCount").textContent=`共 ${list.length} 条`;
+  if(list.length===0){ wrap.innerHTML=`<div class="empty">还没有流水。记一笔或批量导入。</div>`; return; }
+  let html=`<table><thead><tr><th>日期</th><th>商家/说明</th><th class="num">金额</th><th>模块</th><th>备注</th><th></th></tr></thead><tbody>`;
+  list.forEach(e=>{
+    const idx=state.expenses.indexOf(e);
+    html+=`<tr>
+      <td>${fmtDate(e.date)}</td>
+      <td>${escapeHtml(e.merchant)}</td>
+      <td class="num">${fmt(e.amount)}</td>
+      <td><select class="exCatSel" data-i="${idx}">${allCats().map(c=>`<option value="${escapeHtml(c)}"${c===e.cat?" selected":""}>${escapeHtml(c)}</option>`).join("")}</select></td>
+      <td><input type="text" class="exNoteInp" data-i="${idx}" value="${escapeHtml(e.note||"")}" placeholder="点击添加备注"></td>
+      <td class="right"><button class="danger small exDel" data-i="${idx}">删</button></td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  wrap.innerHTML=html;
+  wrap.querySelectorAll(".exCatSel").forEach(el=>el.onchange=e=>{const idx=+el.dataset.i;const ex=state.expenses[idx];ex.cat=el.value;if(ex.merchant){merchantMap[ex.merchant]=el.value;saveMerchantMap();}save();renderAll();});
+  wrap.querySelectorAll(".exNoteInp").forEach(el=>{
+    el.onchange=e=>{state.expenses[+el.dataset.i].note=el.value.trim();save();};
+    el.onkeydown=e=>{ if(e.key==="Enter"){el.blur();} };
+  });
+  wrap.querySelectorAll(".exDel").forEach(el=>el.onclick=e=>{state.expenses.splice(+el.dataset.i,1);save();renderAll();});
+}
+function renderKeywords(){
+  const body=document.getElementById("kwBody");
+  body.innerHTML="";
+  const cats=catList();
+  state.keywords.forEach((k,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input type="text" class="kwKw" data-i="${i}" value="${escapeHtml(k.kw)}" style="width:140px"></td>
+      <td><select class="kwCat" data-i="${i}">${cats.map(c=>`<option value="${escapeHtml(c)}"${c===k.cat?" selected":""}>${escapeHtml(c)}</option>`).join("")}<option value="其他"${k.cat==="其他"?" selected":""}>其他</option></select></td>
+      <td class="right"><button class="danger small kwDel" data-i="${i}">删</button></td>`;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll(".kwKw").forEach(el=>el.onchange=e=>{state.keywords[+el.dataset.i].kw=el.value.trim();save();});
+  body.querySelectorAll(".kwCat").forEach(el=>el.onchange=e=>{state.keywords[+el.dataset.i].cat=el.value;save();});
+  body.querySelectorAll(".kwDel").forEach(el=>el.onclick=e=>{state.keywords.splice(+el.dataset.i,1);save();renderKeywords();});
+}
+function renderMonthNote(){
+  const ta=document.getElementById("monthNoteArea");
+  // 用户正在输入时不覆盖内容
+  if(document.activeElement!==ta) ta.value=state.monthNote||"";
+}
+function renderAll(){
+  renderRules(); renderDashboard(); renderCategorySelects(); renderExpenses(); renderKeywords(); renderMonthNote();
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+// ===== 弹窗与提示 =====
+let _confirmCb=null;
+function askConfirm(msg,cb){
+  document.getElementById("mMsg").textContent=msg;
+  document.getElementById("mOverlay").classList.add("show");
+  _confirmCb=cb;
+}
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.style.display="block"; t.style.opacity="1";
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>{t.style.opacity="0";setTimeout(()=>{t.style.display="none"},300)},2200);
+}
+document.getElementById("mNo").onclick=()=>{document.getElementById("mOverlay").classList.remove("show");};
+document.getElementById("mYes").onclick=()=>{document.getElementById("mOverlay").classList.remove("show");if(_confirmCb)_confirmCb();};
+
+// ===== 账单解析 =====
+function csvSplit(line){
+  const tabs=(line.match(/\t/g)||[]).length;
+  const commas=(line.match(/,/g)||[]).length;
+  if(tabs>0 && tabs>=commas) return line.split("\t").map(s=>String(s).trim());
+  const out=[]; let cur="", q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ if(q&&line[i+1]==='"'){cur+='"';i++;} else q=!q; }
+    else if(c===','&&!q){ out.push(cur); cur=""; }
+    else cur+=c;
+  }
+  out.push(cur);
+  return out.map(s=>String(s).trim());
+}
+function normHeader(s){
+  return s.replace(/[\s（]/g,"").replace(/[）]/g,"").replace(/[\/／]/g,"");
+}
+function parseBill(text){
+  text=String(text||"").replace(/^\uFEFF/,"");
+  const lines=text.split(/\r?\n/);
+  let result=[], skippedIncome=0, skippedNeutral=0;
+
+  // 找微信/支付宝的标准表头行（包含"金额"+"收/支"）
+  let headerIdx=-1, headerCols=null;
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    if(/金额/.test(l) && /(收[\/／]支|收支|方向)/.test(l) && /[,，\t]/.test(l)){
+      headerCols=csvSplit(l); headerIdx=i; break;
+    }
+  }
+  if(headerCols){
+    const idx={};
+    headerCols.forEach((h,i)=>{
+      const n=normHeader(h);
+      if(/金额/.test(n)) idx.amt=i;
+      if(/收支/.test(n)) idx.dir=i;
+      if(/交易对方|对方/.test(n)) idx.merch=i;
+      if(/商品/.test(n)) idx.prod=i;
+      if(/交易时间|记账日期|[日时]间/.test(n)) idx.date=i;
+    });
+    for(let i=headerIdx+1;i<lines.length;i++){
+      const line=lines[i].trim(); if(!line) continue;
+      if(/^[-—=_]{3,}/.test(line)) continue;
+      if(/^(共|本期[^\d]*$|微信支付|支付宝|---|导出|导出时间|微信账号|起始时间|终止时间)/.test(line)) continue;
+      const cells=csvSplit(line); if(cells.length<3) continue;
+      const dir=idx.dir!=null?(cells[idx.dir]||"") : "";
+      const amtRaw=idx.amt!=null?(cells[idx.amt]||"") : "";
+      const amt=parseFloat(amtRaw.replace(/[^\d.-]/g,""));
+      if(!isFinite(amt)||Math.abs(amt)<0.001){ skippedNeutral++; continue; }
+      // 只取支出
+      if(/收入/.test(dir) && !/支出/.test(dir)){ skippedIncome++; continue; }
+      if(dir && !/支出/.test(dir)){ skippedNeutral++; continue; }
+      let merch=(idx.merch!=null?(cells[idx.merch]||""):"")+" "+(idx.prod!=null?(cells[idx.prod]||""):"");
+      merch=merch.replace(/\s+/g," ").trim()||"未命名";
+      let date=todayStr();
+      if(idx.date!=null&&cells[idx.date]){
+        const m=cells[idx.date].match(/\d{4}[-/]\d{1,2}[-/]\d{1,2}/);
+        if(m) date=m[0].replace(/\//g,"-");
+      }
+      result.push({date,merchant:merch,amount:Math.abs(amt),cat:matchCategory(merch)});
+    }
+    return {rows:result, skippedIncome, skippedNeutral, mode:"csv"};
+  }
+
+  // 无表头但可识别为 微信/支付宝 账单明细行（App 复制/手动导出常见）
+  // 标准列序：交易时间 | 交易类型 | 交易对方 | 商品 | 收/支 | 金额 | 支付方式 | 状态 | 交易单号 | 商户单号
+  const billCells=[];
+  for(const line of lines){
+    const t=line.trim(); if(!t) continue;
+    if(/^[-—=_]{3,}/.test(t)) continue;
+    const cells=csvSplit(t);
+    if(cells.length>=8 && /^\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(cells[0]||"")) billCells.push(cells);
+  }
+  if(billCells.length>0){
+    for(const cells of billCells){
+      const dir=cells[4]||"";
+      if(/收入/.test(dir) && !/支出/.test(dir)){ skippedIncome++; continue; }
+      if(dir && !/支出/.test(dir)){ skippedNeutral++; continue; }
+      const amtRaw=cells[5]||"";
+      const amt=parseFloat(amtRaw.replace(/[^\d.-]/g,""));
+      if(!isFinite(amt)||Math.abs(amt)<0.001){ skippedNeutral++; continue; }
+      const m=cells[0].match(/\d{4}[-/]\d{1,2}[-/]\d{1,2}/);
+      const date=m?m[0].replace(/\//g,"-"):todayStr();
+      let merch=(cells[2]||"")+" "+(cells[3]||"");
+      merch=merch.replace(/\s+/g," ").trim()||"未命名";
+      result.push({date,merchant:merch,amount:Math.abs(amt),cat:matchCategory(merch)});
+    }
+    return {rows:result, skippedIncome, skippedNeutral, mode:"bill"};
+  }
+
+  // 降级：通用解析（无标准表头时，当纯文本处理）
+  const rawLines=lines.filter(l=>l.trim());
+  let skipped=0;
+  for(const line of rawLines){
+    if(/^(日期|交易时间|时间|账单|---|\s*$)/i.test(line) && result.length===0 && rawLines.indexOf(line)<2) continue;
+    let parts=line.split(/[\t;,\s]{1,}| {2,}|\s+/).filter(p=>p!=="");
+    if(parts.length<=2) parts=line.split(/\s+/).filter(p=>p!=="");
+    let amt=null, amtIdx=-1;
+    for(let i=0;i<parts.length;i++){
+      const m=parts[i].replace(/[¥$￥,]/g,"").match(/^-?\d+(\.\d+)?$/);
+      if(m){ const v=parseFloat(m[0]); if(v!==0){ amt=Math.abs(v); amtIdx=i; break; } }
+    }
+    if(amt===null){ skipped++; continue; }
+    const desc=parts.filter((p,i)=>i!==amtIdx&&!/^\d{4}[-/]\d{1,2}([-/]\d{1,2})?$/.test(p)&&!/^\d{2}:\d{2}/.test(p)&&!/^(收|支|收入|支出|已收|已付)$/i.test(p)).join(" ");
+    result.push({date:todayStr().slice(0,7)+"-01",merchant:desc||"未命名",amount:amt,cat:matchCategory(desc)});
+  }
+  return {rows:result, skippedIncome:0, skippedNeutral:skipped, mode:"generic"};
+}
+
+// ===== 事件 =====
+document.getElementById("monthInput").value=curMonth();
+document.getElementById("exDate").value=todayStr();
+
+document.getElementById("monthInput").onchange=e=>{
+  const m=e.target.value;
+  load(m); save(); renderAll();
+  refreshMigrateSelect();
+};
+document.getElementById("applyIncome").onclick=()=>{
+  state.income=Math.max(0,parseFloat(document.getElementById("incomeInput").value)||0);
+  save(); renderAll();
+};
+document.getElementById("incomeInput").onkeydown=e=>{ if(e.key==="Enter") document.getElementById("applyIncome").click(); };
+document.getElementById("loadDemo").onclick=()=>{
+  askConfirm("载入示例数据会覆盖当前月份的数据，继续？",()=>{
+    state=demoState(state.month); save();
+    document.getElementById("incomeInput").value=state.income;
+    renderAll(); toast("示例数据已载入");
+  });
+};
+document.getElementById("clearMonth").onclick=()=>{
+  askConfirm("清空本月全部数据（收入/规则/流水）？此操作不可撤销。",()=>{
+    state=freshState(state.month); save();
+    document.getElementById("incomeInput").value=0;
+    renderAll(); toast("本月数据已清空");
+  });
+};
+document.getElementById("addRule").onclick=()=>{
+  state.rules.push({cat:"新模块",type:"pct",value:5}); save(); renderAll();
+};
+document.getElementById("addKw").onclick=()=>{
+  state.keywords.push({kw:"新关键词",cat:catList()[0]||"其他"}); save(); renderKeywords();
+};
+document.getElementById("addEx").onclick=()=>{
+  const date=document.getElementById("exDate").value||todayStr();
+  const merchant=document.getElementById("exMerchant").value.trim();
+  const amount=parseFloat(document.getElementById("exAmount").value);
+  let cat=document.getElementById("exCat").value;
+  if(!merchant){ toast("请填写商家/说明"); return; }
+  if(!(amount>=0)){ toast("请填写金额"); return; }
+  if(!cat) cat=matchCategory(merchant);
+  const note=document.getElementById("exNote").value.trim();
+  state.expenses.push({date,merchant,amount:Math.abs(amount),cat,note});
+  if(merchant){ merchantMap[merchant]=cat; saveMerchantMap(); }
+  save(); renderAll();
+  document.getElementById("exMerchant").value="";
+  document.getElementById("exAmount").value="";
+  document.getElementById("exNote").value="";
+};
+document.getElementById("filterCat").onchange=renderExpenses;
+
+// 本月复盘：输入即时更新 state，防抖保存
+let _noteSaveTimer=null;
+document.getElementById("monthNoteArea").oninput=e=>{
+  state.monthNote=e.target.value;
+  clearTimeout(_noteSaveTimer);
+  _noteSaveTimer=setTimeout(()=>{save();},600);
+};
+document.getElementById("monthNoteArea").onchange=()=>{
+  clearTimeout(_noteSaveTimer);
+  save();
+};
+
+// ===== 智能分析（本地规则引擎，无需联网）=====
+const AI_BEGIN="<!-- 🤖 AI分析 · 以下由一键生成 -->";
+const AI_END="<!-- 🤖 AI分析结束 -->";
+function isoLocal(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function setAiSection(md){
+  let note=state.monthNote||"";
+  const b=note.indexOf(AI_BEGIN), e=note.indexOf(AI_END);
+  if(b>=0&&e>b) note=note.slice(0,b)+note.slice(e+AI_END.length);
+  note=note.trim();
+  note=(note?note+"\n\n":"")+AI_BEGIN+"\n"+md.trim()+"\n"+AI_END;
+  state.monthNote=note;
+  document.getElementById("monthNoteArea").value=note;
+  save();
+  toast("分析已写入复盘（手动总结不受影响）");
+}
+function topMerchants(list,n){
+  const m={};
+  for(const e of list){ const k=e.merchant||"未命名"; m[k]=(m[k]||0)+e.amount; }
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,n);
+}
+function analyzeMonth(){
+  const budgets=computeBudgets();
+  const spent=spentByCat();
+  const totalSpent=state.expenses.reduce((a,e)=>a+e.amount,0);
+  const [y,mo]=state.month.split("-").map(Number);
+  const daysInMonth=new Date(y,mo,0).getDate();
+  const isCur=state.month===curMonth();
+  const now=new Date();
+  const elapsed=Math.max(1,Math.min(daysInMonth,isCur?now.getDate():daysInMonth));
+  const remainDays=Math.max(0,daysInMonth-elapsed);
+  const monthProgress=elapsed/daysInMonth*100;
+  const dailyAvg=totalSpent/elapsed;
+  const projected=dailyAvg*daysInMonth;
+  const saveRate=state.income>0?((state.income-totalSpent)/state.income*100):null;
+  const totalBudget=budgets.reduce((a,b)=>a+b.budget,0);
+  const remainBudget=totalBudget-totalSpent;
+  const allowance=remainDays>0?remainBudget/remainDays:null;
+  const L=[];
+  L.push(`## 🤖 本月智能分析（${isoLocal(now)} 生成）`);
+  L.push(`**总览**：收入 ${fmt(state.income)} · 已支出 ${fmt(totalSpent)}${state.income>0?`（占收入 ${(totalSpent/state.income*100).toFixed(0)}%）`:""} · 结余 ${fmt(state.income-totalSpent)}${saveRate!==null?` · 储蓄率 ${saveRate.toFixed(0)}%`:""}`);
+  L.push(`- 本月已过 ${elapsed}/${daysInMonth} 天（${monthProgress.toFixed(0)}%），日均支出 ${dailyAvg.toFixed(1)} 元`);
+  if(isCur) L.push(`- 按当前节奏，月末预计总支出 ${fmt(projected)}${state.income>0?`，占收入 ${(projected/state.income*100).toFixed(0)}%`:""}`);
+  if(allowance!==null) L.push(`- 剩余 ${remainDays} 天，按总预算每天还可花 **${allowance.toFixed(1)} 元**`);
+  L.push("");
+  L.push("**模块明细**（按使用率排序）：");
+  const rows=budgets.map(b=>({cat:b.cat,budget:b.budget,spent:spent[b.cat]||0})).sort((a,b)=>usage(b)-usage(a));
+  for(const r of rows){
+    if(r.budget>0){
+      const p=(r.spent/r.budget*100).toFixed(0);
+      L.push(`- ${r.cat}：预算 ${fmt(r.budget)}，已花 ${fmt(r.spent)}（${p}%）${r.spent>r.budget?"⚠️ 超支 "+fmt(r.spent-r.budget):(r.spent/r.budget>=0.8?"⚠️ 接近上限":"✓")}`);
+    } else if(r.spent>0){
+      L.push(`- ${r.cat}：无预算，已花 ${fmt(r.spent)} ⚠️ 建议补设预算`);
+    }
+  }
+  const extra=Object.keys(spent).filter(c=>c!=="未分配"&&!budgets.some(b=>b.cat===c));
+  for(const c of extra) L.push(`- ${c}：未纳入预算，已花 ${fmt(spent[c])} ⚠️ 规则表没有这个模块，看板曾忽略这些支出`);
+  const tmAll=topMerchants(state.expenses,5);
+  if(tmAll.length){
+    L.push("");
+    L.push(`**商家TOP5**：${tmAll.map(t=>`${t[0]}（${fmt(t[1])}）`).join("、")}`);
+  }
+  const advice=[];
+  for(const r of rows.filter(r=>r.budget>0&&r.spent>r.budget)){
+    const tm=topMerchants(state.expenses.filter(e=>e.cat===r.cat),3);
+    advice.push(`${r.cat}已超支 ${fmt(r.spent-r.budget)}${tm.length?`，主要去向：${tm.map(t=>`${t[0]}（${fmt(t[1])}）`).join("、")}`:""}。下月考虑把该模块预算上调 ${Math.max(50,Math.ceil((r.spent-r.budget)/50)*50)} 元，或限制上述商家频次。`);
+  }
+  for(const r of rows.filter(r=>r.budget>0&&r.spent<=r.budget&&r.spent/r.budget>=0.8)){
+    advice.push(`${r.cat}已用 ${(r.spent/r.budget*100).toFixed(0)}%，只剩 ${fmt(r.budget-r.spent)}，本月剩余时间尽量避开该模块的非必要消费。`);
+  }
+  if(monthProgress>50){
+    for(const r of rows.filter(r=>r.budget>0&&r.spent/r.budget<0.3)){
+      advice.push(`${r.cat}预算只用了 ${(r.spent/r.budget*100).toFixed(0)}%（本月已过半）——要么确实省了，要么账单还没导全，检查一下。`);
+    }
+  }
+  const topEx=[...state.expenses].sort((a,b)=>b.amount-a.amount)[0];
+  if(topEx&&totalSpent>0&&topEx.amount/totalSpent>0.2){
+    advice.push(`最大单笔「${topEx.merchant}」${fmt(topEx.amount)}占总支出 ${(topEx.amount/totalSpent*100).toFixed(0)}%，确认是否必要——大额单笔是预算失控的常见主因。`);
+  }
+  if(tmAll.length&&totalSpent>0&&tmAll[0][1]/totalSpent>0.25){
+    advice.push(`「${tmAll[0][0]}」累计 ${fmt(tmAll[0][1])}，占总支出 ${(tmAll[0][1]/totalSpent*100).toFixed(0)}%，是本月第一消费大头，值得评估频次。`);
+  }
+  if(saveRate!==null&&saveRate<10){
+    advice.push(`储蓄率仅 ${saveRate.toFixed(0)}%。建议先储蓄后消费：把收入的 15%~20% 固定为储蓄模块，剩下的再分配。`);
+  }
+  if(isCur&&allowance!==null&&allowance>0&&dailyAvg>allowance*1.3){
+    advice.push(`当前日均 ${dailyAvg.toFixed(1)} 元明显高于剩余天数日均上限 ${allowance.toFixed(1)} 元，需要收紧节奏，否则月末会吃掉结余。`);
+  }
+  if(advice.length===0) advice.push("各模块都在预算内、消费节奏健康。保持记账习惯，月底把心得写在手动总结区。");
+  L.push("");
+  L.push("**建议**：");
+  advice.forEach((a,i)=>L.push(`${i+1}. ${a}`));
+  L.push("");
+  L.push("（本段由内置分析引擎生成，仅供参考；你的手动总结写在区块外即可，互不覆盖）");
+  setAiSection(L.join("\n"));
+}
+function analyzeWeek(){
+  const dates=state.expenses.map(e=>String(e.date||"").slice(0,10)).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+  if(!dates.length){ toast("本月还没有流水，先记一笔或导入账单"); return; }
+  const ref=state.month===curMonth()?todayStr():dates[dates.length-1];
+  const day=86400000;
+  const d1=new Date(ref+"T00:00:00");
+  const d0=new Date(d1.getTime()-6*day);
+  const dpe=new Date(d0.getTime()-day);
+  const wStart=isoLocal(d0), wEnd=ref, pStart=isoLocal(new Date(d0.getTime()-7*day)), pEnd=isoLocal(dpe);
+  const inRange=(e,a,b)=>{ const d=String(e.date||"").slice(0,10); return d>=a&&d<=b; };
+  const cur=state.expenses.filter(e=>inRange(e,wStart,wEnd));
+  const prev=state.expenses.filter(e=>inRange(e,pStart,pEnd));
+  if(!cur.length){ toast(`近7天（${wStart} ~ ${wEnd}）没有流水记录`); return; }
+  const sum=l=>l.reduce((a,e)=>a+e.amount,0);
+  const cSum=sum(cur), pSum=sum(prev);
+  const delta=pSum>0?((cSum-pSum)/pSum*100):null;
+  const byCat={};
+  cur.forEach(e=>byCat[e.cat]=(byCat[e.cat]||0)+e.amount);
+  const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const tm=topMerchants(cur,5);
+  const big=[...cur].sort((a,b)=>b.amount-a.amount).slice(0,3);
+  const L=[];
+  L.push(`## 📈 近一周分析（${wStart} ~ ${wEnd}，${isoLocal(new Date())} 生成）`);
+  L.push(`**总览**：7 天共支出 ${fmt(cSum)} · 日均 ${(cSum/7).toFixed(1)} 元 · 共 ${cur.length} 笔`);
+  if(delta!==null) L.push(`- 对比上一个 7 天（${fmt(pSum)}）：${delta>=0?"↑ 多花":"↓ 少花"} ${Math.abs(delta).toFixed(0)}%`);
+  L.push(`- 模块分布：${cats.map(c=>`${c[0]} ${fmt(c[1])}（${(c[1]/cSum*100).toFixed(0)}%）`).join(" · ")}`);
+  if(tm.length) L.push(`- 主要商家：${tm.map(t=>`${t[0]}（${fmt(t[1])}）`).join("、")}`);
+  if(big.length) L.push(`- 最大单笔：${big.map(e=>`${e.merchant} ${fmt(e.amount)}`).join("、")}`);
+  const advice=[];
+  if(delta!==null&&delta>30) advice.push(`本周比上周多花了 ${delta.toFixed(0)}%。先区分是意外支出（缴费、购物）还是常态，若成常态需要上调对应模块预算或收紧其他模块。`);
+  if(cats.length&&cats[0][1]/cSum>0.5) advice.push(`「${cats[0][0]}」占了本周支出的一半以上（${(cats[0][1]/cSum*100).toFixed(0)}%），重点盯这个模块。`);
+  const b0=computeBudgets().find(b=>b.cat===cats[0][0]);
+  if(b0&&b0.budget>0&&cats[0][1]>b0.budget/2) advice.push(`「${cats[0][0]}」一周就花掉月预算的一半（${(cats[0][1]/b0.budget*100).toFixed(0)}%），按此速度月中就会用完。`);
+  if(state.income>0){
+    const weekRef=state.income/4.345;
+    const share=cSum/weekRef*100;
+    L.push(`- 本周支出占月收入约 ${share.toFixed(0)}%（月均每周参考 ${fmt(weekRef)}）`);
+    if(share>35) advice.push(`本周支出占月收入 ${share.toFixed(0)}%，单周偏高——剩余几周需回落到 ${fmt(weekRef*0.8)}/周 以内。`);
+  }
+  if(advice.length===0) advice.push("本周节奏正常，无异常集中消费，继续保持。");
+  L.push("");
+  L.push("**建议**：");
+  advice.forEach((a,i)=>L.push(`${i+1}. ${a}`));
+  setAiSection(L.join("\n"));
+}
+document.getElementById("aiMonthBtn").onclick=()=>{
+  if(!state.expenses.length){ toast("本月还没有流水，先记一笔或导入账单"); return; }
+  analyzeMonth();
+};
+document.getElementById("aiWeekBtn").onclick=analyzeWeek;
+
+// 批量导入解析
+let pvSelected = new Set();
+function pvOptions(sel){
+  return allCats().map(c=>`<option value="${escapeHtml(c)}"${c===sel?" selected":""}>${escapeHtml(c)}</option>`).join("");
+}
+function renderPreviewTable(){
+  const wrap=document.getElementById("previewWrap");
+  if(!parsedPreview.length){ wrap.style.display="none"; document.getElementById("pvBulkBar").style.display="none"; return; }
+  document.getElementById("pvBulkBar").style.display="flex";
+  // 填充批量下拉（保持上次选择）
+  const bulkSel=document.getElementById("pvBulkCat");
+  const prevVal=bulkSel.value;
+  bulkSel.innerHTML=catList().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("")+`<option value="其他">其他</option>`;
+  if(prevVal) bulkSel.value=prevVal;
+  const allSel=parsedPreview.length>0&&pvSelected.size===parsedPreview.length;
+  let html=`<table><thead><tr><th style="width:30px"><input type="checkbox" id="pvAllChk"${allSel?" checked":""} title="全选 / 全不选"></th><th>说明（点商家名 = 选中同商家）</th><th class="num">金额</th><th>模块</th></tr></thead><tbody>`;
+  parsedPreview.forEach((p,i)=>{
+    html+=`<tr class="${pvSelected.has(i)?"pv-on":""}"><td><input type="checkbox" class="pvChk" data-i="${i}"${pvSelected.has(i)?" checked":""}></td><td class="pv-mer" data-i="${i}" title="点击选中所有相同商家的行">${escapeHtml(p.merchant)}</td><td class="num">${fmt(p.amount)}</td><td><select class="pvCat" data-i="${i}">${pvOptions(p.cat)}</select></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  wrap.innerHTML=html; wrap.style.display="block";
+  document.getElementById("pvSelCount").textContent=`已选 ${pvSelected.size} 条`;
+  wrap.querySelectorAll(".pvChk").forEach(el=>el.onchange=()=>{
+    const i=+el.dataset.i;
+    if(el.checked) pvSelected.add(i); else pvSelected.delete(i);
+    el.closest("tr").classList.toggle("pv-on",el.checked);
+    document.getElementById("pvSelCount").textContent=`已选 ${pvSelected.size} 条`;
+    const all=document.getElementById("pvAllChk");
+    if(all) all.checked=(pvSelected.size===parsedPreview.length);
+  });
+  const all=document.getElementById("pvAllChk");
+  if(all) all.onchange=()=>{ if(all.checked) parsedPreview.forEach((_,i)=>pvSelected.add(i)); else pvSelected.clear(); renderPreviewTable(); };
+  wrap.querySelectorAll(".pv-mer").forEach(el=>el.onclick=()=>{
+    const p=parsedPreview[+el.dataset.i];
+    parsedPreview.forEach((q,i)=>{ if(q.merchant===p.merchant) pvSelected.add(i); });
+    renderPreviewTable();
+  });
+  wrap.querySelectorAll(".pvCat").forEach(el=>el.onchange=e=>{
+    const p=parsedPreview[+el.dataset.i]; p.cat=el.value;
+    if(p.merchant){ merchantMap[p.merchant]=el.value; saveMerchantMap(); }
+  });
+}
+document.getElementById("pvSelOther").onclick=()=>{
+  parsedPreview.forEach((p,i)=>{ if(p.cat==="其他") pvSelected.add(i); });
+  renderPreviewTable();
+};
+document.getElementById("pvSelNone").onclick=()=>{ pvSelected.clear(); renderPreviewTable(); };
+document.getElementById("pvBulkApply").onclick=()=>{
+  if(!pvSelected.size){ toast("请先勾选要批量分类的行"); return; }
+  const cat=document.getElementById("pvBulkCat").value;
+  for(const i of pvSelected){
+    const p=parsedPreview[i]; p.cat=cat;
+    if(p.merchant){ merchantMap[p.merchant]=cat; }
+  }
+  saveMerchantMap();
+  toast(`已将 ${pvSelected.size} 条设为「${cat}」`);
+  renderPreviewTable();
+};
+document.getElementById("parseBtn").onclick=()=>{
+  const text=document.getElementById("pasteArea").value.trim();
+  if(!text){ toast("请先粘贴账单内容"); return; }
+  const result=parseBill(text);
+  parsedPreview=result.rows;
+  pvSelected=new Set();
+  const info=[];
+  if(result.rows.length) info.push(`解析到 ${result.rows.length} 条支出`);
+  if(result.skippedIncome) info.push(`跳过 ${result.skippedIncome} 笔收入`);
+  if(result.skippedNeutral) info.push(`跳过 ${result.skippedNeutral} 行`+ (result.mode==="csv"?" (未标注收支)":""));
+  document.getElementById("parseInfo").textContent=info.join(" · ")||"未识别到有效账单";
+  if(parsedPreview.length===0){ document.getElementById("previewWrap").style.display="none"; document.getElementById("pvBulkBar").style.display="none"; document.getElementById("confirmImportBtn").disabled=true; return; }
+  renderPreviewTable();
+  document.getElementById("confirmImportBtn").disabled=false;
+};
+document.getElementById("confirmImportBtn").onclick=()=>{
+  for(const p of parsedPreview){
+    state.expenses.push({date:p.date,merchant:p.merchant,amount:p.amount,cat:p.cat});
+    if(p.merchant){ merchantMap[p.merchant]=p.cat; saveMerchantMap(); }
+  }
+  save(); renderAll();
+  document.getElementById("pasteArea").value="";
+  document.getElementById("previewWrap").style.display="none";
+  document.getElementById("parseInfo").textContent=`已导入 ${parsedPreview.length} 条`;
+  document.getElementById("confirmImportBtn").disabled=true;
+  parsedPreview=[];
+};
+
+// 导出 / 导入 JSON
+document.getElementById("exportBtn").onclick=()=>{
+  const data={...state, _merchantMap:merchantMap, _settings:settings, _exportVersion:2};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download=`理财数据-${state.month}.json`; a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); if(d._merchantMap){ for(const k in d._merchantMap) merchantMap[k]=d._merchantMap[k]; saveMerchantMap(); delete d._merchantMap; } if(d._settings){ settings={...settings,...d._settings}; saveSettings(); delete d._settings; } delete d._exportVersion; delete d.merchantMap; state=d; state.month=state.month||curMonth(); save(); document.getElementById("incomeInput").value=state.income; document.getElementById("monthInput").value=state.month; document.getElementById("autoMigrateChk").checked=settings.autoMigrateRules; refreshMigrateSelect(); renderAll(); toast("数据已导入"); }catch(err){ toast("文件解析失败："+err.message); } };
+  r.readAsText(f);
+};
+
+// 自动迁移开关
+document.getElementById("autoMigrateChk").onchange=e=>{
+  settings.autoMigrateRules=e.target.checked; saveSettings();
+  toast(settings.autoMigrateRules?"已开启：新月份自动继承上月规则":"已关闭自动迁移");
+};
+// 手动复制规则
+function refreshMigrateSelect(){
+  const sel=document.getElementById("migrateSrcSel");
+  const months=getAllMonthsWithData().filter(m=>m!==state.month);
+  if(months.length===0){ sel.innerHTML=`<option value="">无可用月份</option>`; sel.disabled=true; return; }
+  sel.innerHTML=months.map(m=>`<option value="${m}">${m}</option>`).join("");
+  sel.disabled=false;
+}
+document.getElementById("migrateRulesBtn").onclick=()=>{
+  const src=document.getElementById("migrateSrcSel").value;
+  if(!src){ toast("没有可复制的月份"); return; }
+  askConfirm(`从 ${src} 复制规则和关键词到当前月（${state.month}）？`,()=>{
+    try{
+      const ps=JSON.parse(localStorage.getItem(PREFIX+src));
+      if(!ps){ toast("源月份数据为空"); return; }
+      if(ps.rules && ps.rules.length) state.rules=JSON.parse(JSON.stringify(ps.rules));
+      if(ps.keywords) state.keywords=JSON.parse(JSON.stringify(ps.keywords));
+      save(); renderAll(); toast(`已从 ${src} 复制规则和关键词`);
+    }catch(err){ toast("复制失败："+err.message); }
+  });
+};
+
+// 初始化
+loadSettings();
+loadMerchantMap();
+load(curMonth());
+save();
+document.getElementById("incomeInput").value=state.income;
+document.getElementById("autoMigrateChk").checked=settings.autoMigrateRules;
+refreshMigrateSelect();
+renderAll();
+</script>
+</body>
+</html>
