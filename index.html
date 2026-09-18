@@ -11,7 +11,7 @@
     --shadow:0 1px 2px rgba(16,24,40,.06); --radius:10px;
   }
   *{box-sizing:border-box}
-  body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);margin:0;padding:22px;line-height:1.5}
+  body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:fvar(--text);margin:0;padding:22px;line-height:1.5}
   .wrap{max-width:1100px;margin:0 auto}
   h1{font-size:22px;margin:0 0 2px}
   .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
@@ -78,6 +78,19 @@
   #mBox .mMsg{font-size:14px;margin-bottom:18px;color:var(--text);line-height:1.6}
   #mBox .mBtns{display:flex;gap:10px;justify-content:center}
   #toast{display:none;position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1f2329;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:2000;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap;transition:opacity .25s;pointer-events:none}
+  #helpOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1500;align-items:flex-start;justify-content:center;padding:36px 16px;overflow:auto}
+  #helpOverlay.show{display:flex}
+  #helpBox{background:#fff;border-radius:12px;max-width:820px;width:100%;box-shadow:0 16px 50px rgba(0,0,0,.25);overflow:hidden}
+  #helpBox .hHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:2}
+  #helpBox .hBody{padding:16px 22px 24px}
+  .tabBtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .hSec{margin-bottom:18px}
+  .hSec h3{font-size:14px;margin:0 0 6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .hSec ul{margin:0;padding-left:20px;font-size:13px;color:var(--text);line-height:1.8}
+  .hSec li{margin-bottom:2px}
+  .hSec code{background:#f3f4f6;border-radius:4px;padding:1px 5px;font-size:12px}
+  .hTip{font-size:12px;color:var(--muted);background:#f8f9fb;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 12px;margin-top:8px;line-height:1.7}
+  .logNew{font-size:11px;background:#e7f6ec;color:var(--green);border-radius:10px;padding:2px 8px;font-weight:600}
 </style>
 </head>
 <body>
@@ -85,27 +98,79 @@
   <h1>💰 理财工作台 · 零基预算</h1>
   <p class="sub">收入写一次 → 按你设的规则自动分配到各模块 → 消费落在预算内，到边界就预警。数据存在本浏览器本地，可导出备份。</p>
 
-  <!-- 顶部：月份 + 收入 -->
-  <div class="card">
-    <div class="topbar">
-      <div class="field">
-        <label>月份</label>
-        <input type="month" id="monthInput">
-      </div>
-      <div class="field">
-        <label>本月收入（元）</label>
-        <input type="number" id="incomeInput" min="0" step="0.01" style="width:160px">
-      </div>
-      <button id="applyIncome">应用收入</button>
-      <button class="ghost" id="loadDemo">载入示例</button>
-      <button class="subtle" id="clearMonth">清空本月</button>
-      <span class="grow"></span>
-      <button class="subtle small" id="exportBtn">导出 JSON</button>
-      <button class="subtle small" id="importBtn">导入 JSON</button>
-      <input type="file" id="importFile" accept="application/json" style="display:none">
+  <!-- ========= 页面顶部模块：选择月份、填写收入、各种操作按钮 ========= -->
+<!-- card：最外层大卡片盒子，CSS会给它加上圆角、阴影，做成卡片外观 -->
+<div class="card">
+  <!-- topbar：卡片内部的顶部横向工具栏，所有输入框、按钮全部放在这一栏 -->
+  <div class="topbar">
+    <!-- field：一组输入组件的容器，用来包裹【文字标签 + 输入框】 -->
+    <div class="field">
+      <!-- label：文字提示，告诉用户后面输入框的用途：月份 -->
+      <label>月份</label>
+      <!-- 年月选择输入框，type="month"浏览器自带年月选择器；id给JS用来获取选中的年月 -->
+      <input type="month" id="monthInput">
     </div>
-    <div class="summary" id="summaryBox"></div>
+    <!-- 闭合上面的field，结束【月份标签+输入框】这一组 -->
+
+    <!-- field：第二组输入组件，用于本月收入 -->
+    <div class="field">
+      <!-- label：文字提示，告诉用户这个框填本月收入 -->
+      <label>本月收入（元）</label>
+      <!-- 
+        type="number"：只能输入数字
+        id="incomeInput"：JS找到这个输入框的唯一标识
+        min="0"：不允许输入负数
+        step="0.01"：最小变动0.01，支持到分，满足人民币角分
+        style="width:160px"：直接设置输入框的宽度为160像素
+      -->
+      <input type="number" id="incomeInput" min="0" step="0.01" style="width:160px">
+    </div>
+    <!-- 闭合field，结束【本月收入标签+输入框】这一组 -->
+
+    <!-- 按钮：应用收入；id给JS绑定点击事件，保存填写的本月收入 -->
+    <button id="applyIncome">应用收入</button>
+
+    <!-- ghost是按钮样式类，透明边框按钮；载入示例：一键填充测试假数据，id供JS绑定点击 -->
+    <button class="ghost" id="loadDemo">载入示例</button>
+
+    <!-- subtle弱化样式按钮；清空本月，点击删除当前月份全部记账数据，id绑定JS点击 -->
+    <button class="subtle" id="clearMonth">清空本月</button>
+
+    <!-- 
+      grow 弹性占位元素，没有界面显示。
+      flex布局生效：占掉中间剩余全部空白，把后面导入导出按钮挤到工具栏最右侧
+    -->
+    <span class="grow"></span>
+
+    <!-- subtle small：淡色+小号按钮；导出JSON，点击下载全部记账备份文件，id绑定JS -->
+    <button class="subtle small" id="exportBtn">导出 JSON</button>
+
+    <!-- 导入JSON按钮，只是UI展示；点击后JS触发下面隐藏的文件选择框 -->
+    <button class="subtle small" id="importBtn">导入 JSON</button>
+
+    <!-- 
+      文件选择控件，type="file"用于选取本地电脑文件
+      accept="application/json"：只允许选择json格式文件
+      style="display:none"：完全隐藏，页面看不见，由上面按钮JS调用弹出
+    -->
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+
+    <!-- 使用说明按钮：点击弹出「使用说明 + 更新日志」浮层，id 供 JS 绑定点击事件 -->
+    <button class="ghost small" id="helpBtn">📖 使用说明</button>
+
   </div>
+  <!-- 闭合topbar，顶部工具栏到此全部结束 -->
+
+  <!-- 
+    统计汇总盒子 summary：专门放收支统计结果
+    class="summary" 给css设置外观样式
+    id="summaryBox" JS的入口！JS会找到这个盒子，往里面动态写入收入、支出、结余文字
+    标签中间是空，页面刚加载这里没有任何文字，内容完全由JS动态生成
+  -->
+  <div class="summary" id="summaryBox"></div>
+
+</div>
+<!-- 闭合最外层card，整个顶部卡片模块全部结束 -->
 
   <div class="grid">
     <!-- 左：规则配置 -->
@@ -207,7 +272,30 @@
     </details>
   </details>
 
-  <p class="footnote">数据自动保存到本浏览器 · 切换月份即可管理不同月份 · 定期用"导出 JSON"备份到 wiki 目录</p>
+  <p class="footnote">数据自动保存到本浏览器 · 切换月份即可管理不同月份 · 定期用"导出 JSON"备份到 wiki 目录<br>
+    <a href="#" id="helpLink" style="color:var(--accent);text-decoration:none">📖 使用说明与更新日志</a>
+    <span id="footVer" style="margin-left:8px"></span>
+  </p>
+</div>
+
+<!-- ===== 使用说明 + 更新日志 浮层 =====
+     默认隐藏，点顶部「📖 使用说明」按钮（或底部链接）打开。
+     内容由 JS 里的 HELP_GUIDE 与 CHANGELOG 两个常量生成，改功能时改那里即可。 -->
+<div id="helpOverlay">
+  <div id="helpBox">
+    <div class="hHead">
+      <b style="font-size:15px">📖 使用说明与更新日志</b>
+      <span class="tag" id="helpVerTag"></span>
+      <span class="grow"></span>
+      <button class="subtle small tabBtn on" id="helpTabGuide">使用说明</button>
+      <button class="subtle small tabBtn" id="helpTabLog">更新日志</button>
+      <button class="small" id="helpClose">关闭</button>
+    </div>
+    <div class="hBody">
+      <div id="helpGuide"></div>
+      <div id="helpLog" style="display:none"></div>
+    </div>
+  </div>
 </div>
 
 <div id="mOverlay"><div id="mBox"><div class="mMsg" id="mMsg"></div><div class="mBtns"><button class="subtle" id="mNo">取消</button><button id="mYes">确认</button></div></div></div>
@@ -1030,6 +1118,119 @@ document.getElementById("migrateRulesBtn").onclick=()=>{
   });
 };
 
+// ===== 使用说明 + 更新日志 =====
+// 【每次改动功能时，只需要动下面这两个常量：APP_VERSION 和 CHANGELOG】
+// APP_VERSION：当前版本号，显示在浮层右上角和页面底部
+const APP_VERSION = "v2.0";
+// CHANGELOG：更新日志，数组最上面一条 = 最新。每条格式 {v:版本号, d:日期, items:[改动点]}
+const CHANGELOG = [
+  {v:"v2.0", d:"2026-09-18", items:[
+    "新增「📖 使用说明」浮层：顶部按钮和底部链接都能打开，分「使用说明 / 更新日志」两个标签页",
+    "更新日志随版本持续记录，方便回看工作台一路演进的过程",
+    "页面底部显示当前版本号"
+  ]},
+  {v:"v1.5", d:"2026-09 上旬", items:[
+    "看板防漏算：没设预算的模块也会统计，并在末尾显示「未设预算」行",
+    "新增智能分析：🤖 生成本月分析 / 📈 生成近一周分析，结果写入复盘的独立区块，不覆盖你手写的总结",
+    "商家归类改为全局记忆：任意一个月分过的商家，其他月份自动沿用"
+  ]},
+  {v:"v1.4", d:"2026-09 上旬", items:[
+    "批量导入预览支持复选框：可逐条勾选、全选、点商家名选中同商家全部行",
+    "新增「⚡ 批量设为」：一次性把选中的多行归到同一模块"
+  ]},
+  {v:"v1.3", d:"2026-09-12", items:[
+    "每笔流水支持备注（记一笔的输入框最右侧）",
+    "新增「📝 本月复盘」：每个月可独立写总结，自动保存"
+  ]},
+  {v:"v1.2", d:"2026-08 下旬", items:[
+    "修复微信账单日期全部显示月初的问题：支持无表头的明细行，按位置识别日期列",
+    "修复制表符分隔的账单识别失败",
+    "修复把收入也算成支出的问题：导入时只取「支出」的行"
+  ]},
+  {v:"v1.1", d:"2026-08 中旬", items:[
+    "流水列表新增日期列，当天的高亮显示",
+    "新增商家记忆：同一个商家第一次分类后，下次自动归入同一模块",
+    "新增规则的跨月迁移：可勾选「新月份自动继承上月规则」，也可从指定月份手动复制"
+  ]},
+  {v:"v1.0", d:"2026-08-10", items:[
+    "初版上线：填写收入 → 按规则自动分配预算 → 记一笔 → 预算执行看板预警",
+    "规则三种类型：百分比 / 固定 / 余下",
+    "数据保存在浏览器本地，支持导出 JSON 备份"
+  ]}
+];
+// HELP_GUIDE：使用说明，按小节组织。每节 {t:标题, tip:提示（可选）, items:[要点]}
+const HELP_GUIDE = [
+  {t:"① 三步上手", items:[
+    "选月份：顶部「月份」选当前月份（不同月份的数据互相独立）",
+    "填收入：填「本月收入」→ 点「应用收入」",
+    "看预算：右侧「预算执行看板」会自动算出每个模块有多少钱可花",
+    "开始记账：单笔用「✍️ 记一笔」，大批量用下方「📥 批量导入」"
+  ], tip:"规则表里已有一套默认分配（餐饮/交通/话费/学习/社交/娱乐/储蓄）。用一阵后按自己的实际比例调整，才是属于你的预算。"},
+  {t:"② 预算规则三种类型", items:[
+    "百分比：收入 × 比例，比如餐饮 30% —— 收入 3000 就是 900 元",
+    "固定：固定金额，比如话费网费 50 元，不随收入变化",
+    "余下：收入减去其他所有模块后的余额，通常留给「储蓄应急」"
+  ], tip:"建议始终保留一个「余下」模块——这是零基预算的核心：让收入的每一块钱都有归属，不留糊涂账。"},
+  {t:"③ 记账：单笔 vs 批量", items:[
+    "单笔：日期 + 商家/说明 + 金额 + 模块 + 备注 → 点「添加」，适合随手补记",
+    "批量：把微信/支付宝/钱迹导出的账单整段粘贴进「📥 批量导入」→ 点「解析预览」→ 勾选后「⚡ 批量设为」统一分类 →「确认导入」",
+    "导入时会自动跳过收入、退款等行，只统计支出"
+  ], tip:"在预览表里点商家名，可以一键选中该商家的所有行——分类奶茶、外卖这类高频消费特别快。"},
+  {t:"④ 自动分类是怎么认出「美团 = 餐饮」的", items:[
+    "第一层：商家记忆 —— 你手动归过一次类，这个商家就永久记住，且跨月份共享",
+    "第二层：关键词表 —— 在「🏷️ 关键词 → 模块 映射规则」里，包含该关键词就归入对应模块（长词优先）",
+    "都没匹配上 → 归入「其他」，你手动改一次，它就记住了"
+  ], tip:"遇到新商家被分到「其他」，不用改规则表——直接在流水里把它的模块改对，下次自动记住。"},
+  {t:"⑤ 看板颜色和预警", items:[
+    "绿色：已用 < 70%，安全",
+    "黄色：70% ~ 100%，接近上限，注意收着点",
+    "红色：> 100%，已超支，需要调剂或下月调整规则",
+    "没设预算的模块也会统计，显示在看板最后的「未设预算」行，一分钱都不会漏"
+  ]},
+  {t:"⑥ 复盘与分析", items:[
+    "手写：在「📝 本月复盘」写总结，自动保存，每个月独立",
+    "自动生成：点「🤖 生成本月分析」或「📈 生成近一周分析」，会写入复盘的独立区块",
+    "重复点生成只会更新那一块，不会覆盖你手写的文字"
+  ]},
+  {t:"⑦ 跨月与备份（重要）", items:[
+    "切换月份即可管理不同月份，数据互不干扰",
+    "「新月份自动继承上月规则」勾选后，进入新月份会自动带出上月规则；也可用「📋 复制规则」从指定月份手动复制",
+    "「导出 JSON」= 备份全部数据（含商家记忆和设置），换电脑、换浏览器用「导入 JSON」恢复",
+    "换电脑后第一次打开是空白的，导入之前导出的 JSON 即可"
+  ], tip:"数据存在浏览器本地，清理浏览器数据 / 重装系统 / 换浏览器都会丢。养成每月导出一次 JSON 的习惯——那才是真正属于你的账本。"}
+];
+
+// 把上面两个常量渲染成浮层里的 HTML
+function renderHelp(){
+  document.getElementById("helpVerTag").textContent = "当前版本 " + APP_VERSION;
+  const footVer = document.getElementById("footVer");
+  if(footVer) footVer.textContent = APP_VERSION;
+  document.getElementById("helpGuide").innerHTML = HELP_GUIDE.map(sec=>
+    `<div class="hSec"><h3>${escapeHtml(sec.t)}</h3><ul>${sec.items.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>${sec.tip?`<div class="hTip">💡 ${escapeHtml(sec.tip)}</div>`:""}</div>`
+  ).join("");
+  document.getElementById("helpLog").innerHTML = CHANGELOG.map((c,i)=>
+    `<div class="hSec"><h3>${escapeHtml(c.v)} <span class="tag">${escapeHtml(c.d)}</span>${i===0?`<span class="logNew">最新</span>`:""}</h3><ul>${c.items.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></div>`
+  ).join("");
+}
+// 切换「使用说明 / 更新日志」两个标签页
+function helpTab(which){
+  document.getElementById("helpGuide").style.display = which==="guide" ? "" : "none";
+  document.getElementById("helpLog").style.display   = which==="log"   ? "" : "none";
+  document.getElementById("helpTabGuide").classList.toggle("on", which==="guide");
+  document.getElementById("helpTabLog").classList.toggle("on", which==="log");
+}
+function openHelp(){ renderHelp(); helpTab("guide"); document.getElementById("helpOverlay").classList.add("show"); }
+function closeHelp(){ document.getElementById("helpOverlay").classList.remove("show"); }
+document.getElementById("helpBtn").onclick = openHelp;
+document.getElementById("helpLink").onclick = e=>{ e.preventDefault(); openHelp(); };
+document.getElementById("helpClose").onclick = closeHelp;
+document.getElementById("helpTabGuide").onclick = ()=>helpTab("guide");
+document.getElementById("helpTabLog").onclick = ()=>helpTab("log");
+// 点浮层空白处（不是白色内容框）也能关闭
+document.getElementById("helpOverlay").onclick = e=>{ if(e.target.id==="helpOverlay") closeHelp(); };
+// 按 Esc 键关闭
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeHelp(); });
+
 // 初始化
 loadSettings();
 loadMerchantMap();
@@ -1038,6 +1239,7 @@ save();
 document.getElementById("incomeInput").value=state.income;
 document.getElementById("autoMigrateChk").checked=settings.autoMigrateRules;
 refreshMigrateSelect();
+renderHelp();
 renderAll();
 </script>
 </body>
